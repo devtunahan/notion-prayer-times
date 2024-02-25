@@ -3,9 +3,8 @@
 import requests
 from notion_client import Client
 from datetime import datetime, timedelta
-import pytz  # To handle timezone conversions
-from dotenv import load_dotenv  # Import this
-import os  # Import this
+from dotenv import load_dotenv
+import os
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +22,7 @@ def get_prayer_times():
     url = f"http://api.aladhan.com/v1/timingsByCity?city={CITY}&country={COUNTRY}&method=13"
     response = requests.get(url)
     data = response.json()['data']['timings']
-    
+
     # Map the API response to specified names and order
     prayer_times = {
         'Imsak': data['Fajr'],
@@ -33,21 +32,18 @@ def get_prayer_times():
         'Maghrib': data['Maghrib'],
         'Isha': data['Isha']
     }
-    
+
     # Return the prayer times in the specified order
     return {time: prayer_times[time] for time in PRAYER_TIMES_OF_INTEREST}
 
 def update_notion(prayer_times):
     notion = Client(auth=NOTION_TOKEN)
-    vienna_tz = pytz.timezone("Europe/Vienna")
-    today_date = datetime.now(vienna_tz)
-    formatted_date = today_date.strftime('%Y-%m-%d')
+    today_date = datetime.now().strftime('%Y-%m-%d')
 
     for prayer_name in PRAYER_TIMES_OF_INTEREST:
         time = prayer_times[prayer_name]
-        # Convert prayer time to the local timezone and format it
-        prayer_time = vienna_tz.localize(datetime.strptime(f"{formatted_date} {time}", '%Y-%m-%d %H:%M'))
-        
+        prayer_time = datetime.strptime(f"{today_date} {time}", '%Y-%m-%d %H:%M')
+
         if prayer_name == 'Fajr':
             # For Fajr, set the start time 20 minutes earlier
             start_time = prayer_time - timedelta(minutes=20)
@@ -56,7 +52,7 @@ def update_notion(prayer_times):
             # For other prayers, set a duration of 10 minutes
             start_time = prayer_time
             end_time = prayer_time + timedelta(minutes=10)
-        
+
         # Create a new entry for each prayer time
         new_entry = {
             "parent": {"database_id": NOTION_DATABASE_ID},
