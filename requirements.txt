@@ -1,5 +1,5 @@
 requests
 notion-client
 pytz
-dotenv
+python-dotenv
 os
