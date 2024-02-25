@@ -1,0 +1,5 @@
+version: '3'
+services:
+  python-script:
+    build: .
+    image: python-script
