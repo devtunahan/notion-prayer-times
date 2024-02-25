@@ -39,23 +39,23 @@ def get_prayer_times():
 
 def update_notion(prayer_times):
     notion = Client(auth=NOTION_TOKEN)
-    today_date = datetime.now(pytz.timezone("Europe/Vienna"))
+    vienna_tz = pytz.timezone("Europe/Vienna")
+    today_date = datetime.now(vienna_tz)
     formatted_date = today_date.strftime('%Y-%m-%d')
 
     for prayer_name in PRAYER_TIMES_OF_INTEREST:
         time = prayer_times[prayer_name]
-        # Convert prayer time to your local timezone and format it
-        prayer_time = datetime.strptime(f"{formatted_date} {time}", '%Y-%m-%d %H:%M')
-        local_prayer_time = prayer_time.astimezone(pytz.timezone("Europe/Vienna"))
+        # Convert prayer time to the local timezone and format it
+        prayer_time = vienna_tz.localize(datetime.strptime(f"{formatted_date} {time}", '%Y-%m-%d %H:%M'))
         
         if prayer_name == 'Fajr':
             # For Fajr, set the start time 20 minutes earlier
-            start_time = local_prayer_time - timedelta(minutes=20)
-            end_time = local_prayer_time
+            start_time = prayer_time - timedelta(minutes=20)
+            end_time = prayer_time
         else:
             # For other prayers, set a duration of 10 minutes
-            start_time = local_prayer_time
-            end_time = local_prayer_time + timedelta(minutes=10)
+            start_time = prayer_time
+            end_time = prayer_time + timedelta(minutes=10)
         
         # Create a new entry for each prayer time
         new_entry = {
